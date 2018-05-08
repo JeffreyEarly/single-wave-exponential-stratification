@@ -17,3 +17,6 @@ latitude = 0;
 
 z = linspace(min(zIn),max(zIn),Nz);
 wavemodel = InternalWaveModelArbitraryStratification([Lx, Lx, Lz], [Nx, Ny, Nz], rhoFunction, z, Nz, latitude);
+
+[u,v,rho_prime] = WM.VariableFieldsFrom2DOutputFileAtIndex(1,'u','v','s1');
+wavemodel.InitializeWithHorizontalVelocityAndDensityPerturbationFields(0,u,v,rho_prime);
