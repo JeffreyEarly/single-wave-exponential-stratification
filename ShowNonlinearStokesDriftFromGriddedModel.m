@@ -5,7 +5,7 @@ wavelength = 10e3; % wavelength in meters
 j = 1; % vertical mode number
 epsilon = 0.05; % nonlinearity parameter
 maxOscillations = 5; % Total number of oscillations, in periods
-stratification = 'constant';
+stratification = 'exponential';
 z0 = [-10; -250; -625]; % initial particle positions
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -16,7 +16,7 @@ latitude = 0.0;
 k = 2*pi/wavelength;
 wavenumber = 4;
 Nx = 128;
-Ny = 2;
+Ny = 1;
 Nz = 513; % Must include end point to advect at the surface, so use 2^N + 1
 Lx = wavenumber*wavelength;
 Ly = Ny*Lx/Nx;
@@ -87,9 +87,11 @@ rho_correction = (h*epsilon*epsilon/4) * cos(2*k*X) .* ( Rho_zzTerm +  RhoBarDz 
 
 period = wavemodel.InitializeWithPlaneWave(wavenumber,0,j,U,1);
 
-[u_i,v_i] = wavemodel.VelocityFieldAtTime(0);
-w_i = wavemodel.VerticalFieldsAtTime(0);
-rho_i = wavemodel.DensityAtTime(0);
+% [u_i,v_i] = wavemodel.VelocityFieldAtTime(0);
+% w_i = wavemodel.VerticalFieldsAtTime(0);
+% rho_i = wavemodel.DensityAtTime(0);
+
+[u_i,v_i,w_i,rho_prime_i] = wavemodel.VariableFieldsAtTime(0,'u','v','w','rho_prime');
 
 figure, plot(squeeze(u_i(1,1,:)),wavemodel.z), hold on
 plot(squeeze(u_correction(1,1,:)),wavemodel.z)
@@ -97,8 +99,13 @@ plot(squeeze(u_correction(1,1,:)),wavemodel.z)
 figure, plot(squeeze(w_i(Nx/2,1,:)),wavemodel.z), hold on
 plot(squeeze(w_correction(Nx/2,1,:)),wavemodel.z)
 
-figure, plot(squeeze(rho_i(1,1,:))-wavemodel.RhoBarAtDepth(wavemodel.z),wavemodel.z), hold on
+figure, plot(squeeze(rho_prime_i(1,1,:)),wavemodel.z), hold on
 plot(squeeze(rho_correction(1,1,:)),wavemodel.z)
+
+t=450;
+[u_i,v_i,w_i,rho_prime_i] = wavemodel.VariableFieldsAtTime(t,'u','v','w','rho_prime');
+newwavemodel = InternalWaveModelArbitraryStratification([Lx, Ly, Lz], [Nx, Ny, Nz], rho, zDomain, Nz, latitude,'nEVP',2*Nz+16);
+newwavemodel.InitializeWithHorizontalVelocityAndDensityPerturbationFields(t,u_i,v_i,rho_prime_i);
 
 return
 
