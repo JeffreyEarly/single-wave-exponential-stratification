@@ -11,7 +11,7 @@
 scaleFactor = 1;
 LoadFigureDefaults;
 
-file = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/WintersModelRuns/output_180506';
+file = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/WintersModelRuns/output_181113';
 
 WM = WintersModel(file);
 
@@ -44,12 +44,12 @@ elseif WM.NumberOf2DOutputFiles > 1
     Lx = double(dx*Nx);
     Lz = max(zIn)-min(zIn);
     latitude = 0;
-%     wavemodel = InternalWaveModelExponentialStratification([Lx, Lx, Lz], [Nx, Ny, Nz], [5.2e-3 1300], z, Nz, latitude);
+%     wavemodel = InternalWaveModelExponentialStratification([Lx, Lx, Lz], [Nx, Ny, Nz], [5.2e-3 1300], z, latitude);
     
     ProfileDeviation = std((rho_bar-wavemodel.internalModes.rhoFunction(z))/max(rho_bar));
     fprintf('Our assumed profile deviates from the recorded profile by 1 part in 10^{%d}\n',round(log10(ProfileDeviation)));
 
-    [t,u,v,rho_prime] = WM.VariableFieldsFrom2DOutputFileAtIndex(100,'t','u','v','s1');
+    [t,u,v,rho_prime] = WM.VariableFieldsFrom2DOutputFileAtIndex(1,'t','u','v','s1');
     wavemodel.InitializeWithHorizontalVelocityAndDensityPerturbationFields(t,u,v,rho_prime);
 
 else
