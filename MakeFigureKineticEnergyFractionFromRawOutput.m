@@ -13,7 +13,9 @@ LoadFigureDefaults;
 
 file = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/WintersModelRuns/output_181113';
 
-WM = WintersModel(file);
+if ~exist('WM','var')
+    WM = WintersModel(file);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -22,36 +24,22 @@ WM = WintersModel(file);
 if WM.NumberOf3DOutputFiles > 1
     wavemodel = WM.wavemodel;
     maxFileIndex = WM.NumberOf3DOutputFiles;
-    
+    t0 = WM.VariableFieldsFrom3DOutputFileAtIndex(1,'t');
+    t_max = WM.VariableFieldsFrom3DOutputFileAtIndex(maxFileIndex,'t');
+
     % These first two lines actually do the decomposition
     [t,u,v,w,rho_prime] = WM.VariableFieldsFrom3DOutputFileAtIndex(maxFileIndex,'t','u','v','w','rho_prime');
     wavemodel.InitializeWithHorizontalVelocityAndDensityPerturbationFields(t,u,v,rho_prime);
     
 
 elseif WM.NumberOf2DOutputFiles > 1
-    [x,y,z,rho_bar] = WM.VariableFieldsFrom2DOutputFileAtIndex(1,'x','y','z','s1_bar');
+    wavemodel = WM.wavemodel;
+    maxFileIndex = WM.NumberOf2DOutputFiles;
+    t0 = WM.VariableFieldsFrom2DOutputFileAtIndex(1,'t');
+    t_max = WM.VariableFieldsFrom2DOutputFileAtIndex(maxFileIndex,'t');
     
-    z = z-(max(z)-min(z));
-    [rhoFunc, ~, zIn] = InternalModes.StratificationProfileWithName('exponential');
-    rhoFunction = @(z) rhoFunc(z) - rhoFunc(max(zIn)) + double(min(rho_bar));
-    
-
-    
-    Nx = length(x);
-    Ny = 1;
-    Nz = length(z);
-    dx = (max(x)-min(x))/(Nx-1);
-    Lx = double(dx*Nx);
-    Lz = max(zIn)-min(zIn);
-    latitude = 0;
-%     wavemodel = InternalWaveModelExponentialStratification([Lx, Lx, Lz], [Nx, Ny, Nz], [5.2e-3 1300], z, latitude);
-    
-    ProfileDeviation = std((rho_bar-wavemodel.internalModes.rhoFunction(z))/max(rho_bar));
-    fprintf('Our assumed profile deviates from the recorded profile by 1 part in 10^{%d}\n',round(log10(ProfileDeviation)));
-
-    [t,u,v,rho_prime] = WM.VariableFieldsFrom2DOutputFileAtIndex(1,'t','u','v','s1');
+    [t,u,v,rho_prime] = WM.VariableFieldsFrom2DOutputFileAtIndex(maxFileIndex,'t','u','v','s1');
     wavemodel.InitializeWithHorizontalVelocityAndDensityPerturbationFields(t,u,v,rho_prime);
-
 else
     error('No valid files found')
 end
@@ -122,14 +110,19 @@ lambda_x = nu_x*(sqrt(-1)*K).^(2*WM.p_x);
 lambda_z = nu_z*(sqrt(-1)*M).^(2*WM.p_y);
 % tau = WM.VariableFieldsFrom3DOutputFileAtIndex(WM.NumberOf3DOutputFiles,'t');
 tau = max(WM.T_diss_x,WM.T_diss_z);
-R = double(exp((lambda_x+lambda_z)*tau));
+R = double(exp(2*(lambda_x+lambda_z)*(t_max-t0)));
+
+k_diss = double(k_diss);
+j_diss = double(j_diss);
 
 % The highest wavenumber should e-fold in time tau, so let's contour the
 % area that retains 90% of its value
-C = contourc(j_diss,k_diss,R,0.90*[1 1]);
+C = contourc(j_diss,k_diss,R,0.99*[1 1]);
 n = C(2,1);
 j_damp = C(1,1+1:n);
 k_damp = C(2,1+1:n);
+
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -166,7 +159,7 @@ fig1.PaperSize = [FigureSize(3) FigureSize(4)];
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 p1 = subplot(1,3,1);
-pcolor( k, j, log10(waveHKE_plus.') ), xlog, ylog, shading flat, hold on
+jpcolor( k, j, log10(waveHKE_plus.') ); xlog, ylog, shading flat, hold on
 plot( k_damp, j_damp, 'LineWidth', 4, 'Color', 0*[1 1 1])
 plot( k_damp, j_damp, 'LineWidth', 2, 'Color', [1 1 1])
 
@@ -175,7 +168,7 @@ caxis([-10 0])
 set( gca, 'FontSize', figure_axis_tick_size);
 % set(gca, 'YTick', 1000*(-5:1:0));
 % ylabel('depth (m)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
-title('wave energy (m^3/s^2)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
+title('+ wave energy (m^3/s^2)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
 
 % xticks(ticks_x)
 % xticklabels(labels_x)
@@ -194,14 +187,14 @@ cb1.TickLabels = {'10^{-10}', '10^{-8}', '10^{-6}', '10^{-4}', '10^{-2}', '10^{0
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 p2 = subplot(1,3,2);
-pcolor( k, j, log10(waveHKE_minus.') ), xlog, ylog, shading flat, hold on
+jpcolor( k, j, log10(waveHKE_minus.') ); xlog, ylog, shading flat, hold on
 plot( k_damp, j_damp, 'LineWidth', 4, 'Color', 0*[1 1 1])
 plot( k_damp, j_damp, 'LineWidth', 2, 'Color', [1 1 1])
 
 caxis([-10 -5])
 set( gca, 'FontSize', figure_axis_tick_size);
 set(gca, 'YTick', []);
-title('vortex energy (m^3/s^2)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
+title('- wave energy (m^3/s^2)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
 % xticks(ticks_x)
 % xticklabels(labels_x)
 % xlabel('wavelength (km)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
@@ -221,6 +214,13 @@ cb2.TickLabels = {'10^{-10}', '10^{-9}', '10^{-8}', '10^{-7}', '10^{-6}', '10^{-
 %
 % Energy fraction
 %
+
+p3 = subplot(1,3,3);
+jpcolor( wavemodel.x, wavemodel.z, rho_prime.'); shading flat
+
+return
+
+
 
 HKE_fraction = waveHKE_plus./waveHKE;
 
