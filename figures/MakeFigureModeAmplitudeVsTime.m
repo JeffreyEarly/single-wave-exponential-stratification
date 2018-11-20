@@ -1,7 +1,7 @@
 scaleFactor = 1;
 LoadFigureDefaults;
 
-file = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/output_180506_decomp.nc';
+file = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/output_181113_decomp.nc';
 t = ncread(file, 't');
 nT = length(t);
 
@@ -88,7 +88,7 @@ for iHarmonic = 1:nHarmonics
     end
 end
 
-print('-dpng', '-r300', sprintf('ModeAmplitudesVsTime.png'))
+print('-dpng', '-r300', sprintf('ModeAmplitudesVsTimeNew.png'))
 
 return
 

@@ -1,4 +1,4 @@
-file = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/output_180506_decomp.nc';
+file = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/output_181113_decomp.nc';
 t = ncread(file, 't');
 nT = length(t);
 
@@ -6,6 +6,8 @@ i = 5;
 j = 1;
 A_plus = double(squeeze( ncread(file,'Ap_realp', [i j 1], [1 1 nT], [1 1 1])  + sqrt(-1)*ncread(file,'Ap_imagp', [i j 1], [1 1 nT], [1 1 1]) ));
 A_minus = double(squeeze( ncread(file,'Am_realp', [i j 1], [1 1 nT], [1 1 1])  + sqrt(-1)*ncread(file,'Am_imagp', [i j 1], [1 1 nT], [1 1 1]) ));
+
+A_plus = double(ncread(file,'Ap_realp')) +  + sqrt(-1)*double(ncread(file,'Ap_imagp'));
 
 dx = 31.25;
 Lx = 4000;
@@ -25,12 +27,13 @@ A_plus2 = double(squeeze( ncread(file,'Ap_realp', [i j 1], [1 1 nT], [1 1 1])  +
 A_minus2 = double(squeeze( ncread(file,'Am_realp', [i j 1], [1 1 nT], [1 1 1])  + sqrt(-1)*ncread(file,'Am_imagp', [i j 1], [1 1 nT], [1 1 1]) ));
 
 figure
-plot(t/3600, abs(A_plus))
-title('Amplitude of primary mode', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
-xlabel('time (hours)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
-ylabel('depth integrated energy (m^3/s^2)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
+plot(t/3600, abs(A_plus)), ylog, hold on
+plot(t/3600, abs(A_plus2))
+% title('Amplitude of primary mode', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
+% xlabel('time (hours)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
+% ylabel('depth integrated energy (m^3/s^2)', 'FontSize', figure_axis_label_size, 'FontName', figure_font);
 
-print('-depsc', sprintf('PrimaryModeAmplitude.eps'))
+% print('-depsc', sprintf('PrimaryModeAmplitude.eps'))
 
 return;
 figure, plot(angle(A_plus))

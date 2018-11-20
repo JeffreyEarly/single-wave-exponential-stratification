@@ -1,4 +1,4 @@
-model_output_folder = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/WintersModelRuns/output_180506';
+model_output_folder = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification/WintersModelRuns/output_181113';
 output_directory = '/Users/jearly/Documents/ProjectRepositories/single-wave-exponential-stratification';
 
 [filepath,name,ext] = fileparts(model_output_folder);
@@ -7,25 +7,7 @@ outputfile = fullfile(output_directory,strcat(name,'_decomp.nc'));
 WM = WintersModel(model_output_folder);
 
 [x,y,z,rho_bar,rho_prime] = WM.VariableFieldsFrom2DOutputFileAtIndex(1,'x','y','z','s1_bar','s1');
-
-z = z-(max(z)-min(z));
-[rhoFunc, ~, zIn] = InternalModes.StratificationProfileWithName('exponential');
-rhoFunction = @(z) rhoFunc(z) - rhoFunc(max(zIn)) + double(min(rho_bar));
-
-% figure, plot(rho_bar,z), hold on, plot(rhoFunction(z),z)
-
-Nx = length(x);
-Ny = 1;
-Nz = length(z);
-dx = (max(x)-min(x))/(Nx-1);
-Lx = double(dx*Nx);
-Lz = max(zIn)-min(zIn);
-latitude = 0;
-
-z = linspace(min(zIn),max(zIn),Nz);
-if ~exist('wavemodel','var')
-    wavemodel = InternalWaveModelArbitraryStratification([Lx, Lx, Lz], [Nx, Ny, Nz], rhoFunction, z, Nz, latitude,'nEVP',2*Nz+16);
-end
+wavemodel = WM.wavemodel;
 
 nFiles = WM.NumberOf2DOutputFiles;
 fileIncrements = 1:1:nFiles;
